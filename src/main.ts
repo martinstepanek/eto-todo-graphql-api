@@ -1,6 +1,6 @@
 import { GraphQLServer } from 'graphql-yoga';
 import { buildSchema } from 'type-graphql';
-import { UserResolver } from './resolvers/UserResolver';
+import { UserResolver } from './resolvers';
 import { Container } from 'typedi';
 import * as TypeORM from 'typeorm';
 
