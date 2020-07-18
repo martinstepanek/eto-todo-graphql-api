@@ -1,4 +1,4 @@
-import { Arg, Mutation, Query, Resolver } from 'type-graphql';
+import {Arg, Authorized, Mutation, Query, Resolver} from 'type-graphql';
 import { User } from '../models/user/User';
 import { UserInput } from '../models/user/UserInput';
 import { UserRepository } from '../repositories/UserRepository';
@@ -13,6 +13,7 @@ export class UserResolver {
         @Inject('AuthService') private readonly authService: AuthService
     ) {}
 
+    @Authorized()
     @Query(() => User, { description: 'Get user by id' })
     public async user(@Arg('userId') userId: string): Promise<User> {
         const model = await this.userRepository.findOne(userId);
