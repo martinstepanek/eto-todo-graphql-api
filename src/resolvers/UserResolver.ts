@@ -42,6 +42,6 @@ export class UserResolver {
         newUser.picture = token.picture;
         await this.userRepository.save(newUser);
 
-        return this.userRepository.findOne(user.userId);
+        return this.userRepository.findOne(newUser.userId);
     }
 }
