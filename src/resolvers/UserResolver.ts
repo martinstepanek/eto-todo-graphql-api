@@ -40,6 +40,7 @@ export class UserResolver {
         newUser.name = token.name;
         newUser.email = token.email;
         newUser.picture = token.picture;
+        newUser.accessToken = this.authService.generateAccessToken();
         await this.userRepository.save(newUser);
 
         return this.userRepository.findOne(newUser.userId);

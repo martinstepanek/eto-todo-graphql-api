@@ -21,6 +21,10 @@ export class User {
     @Field()
     public picture: string;
 
+    @Column()
+    @Field()
+    public accessToken: string;
+
     @Column({ type: 'enum', enum: UserState, default: UserState.Created })
     public state: UserState;
 

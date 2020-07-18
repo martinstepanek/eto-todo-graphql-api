@@ -16,4 +16,12 @@ export class AuthService {
         });
         return ticket.getPayload();
     }
+
+    public generateAccessToken(): string {
+        const generateString = () =>
+            Math.random()
+                .toString(36)
+                .substring(2, 15);
+        return generateString() + generateString() + generateString() + generateString();
+    }
 }
