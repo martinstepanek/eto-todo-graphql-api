@@ -14,10 +14,15 @@ async function bootstrap(): Promise<void> {
 
     await TypeORM.createConnection();
 
+    const customAuthChecker: AuthChecker<Context> = ({ root, args, context, info }, roles) => {
+        return context.user !== null;
+    };
+
     const schema = await buildSchema({
         resolvers: [UserResolver],
 
         container: Container,
+        authChecker: customAuthChecker,
     });
 
     const server = new GraphQLServer({
