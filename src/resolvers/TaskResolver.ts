@@ -1,12 +1,12 @@
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { InjectRepository } from 'typeorm-typedi-extensions';
-import { Task } from '../models/task/Task';
+import { Task } from '../models/types/task/Task';
 import { TaskRepository } from '../repositories/TaskRepository';
-import { TaskInput } from '../models/task/TaskInput';
+import { TaskInput } from '../models/types/task/TaskInput';
 import { Context } from '../models/Context';
-import { TaskListType } from '../models/task/TaskListType';
+import { TaskListType } from '../models/types/task/TaskListType';
 import { Inject } from 'typedi';
-import { TaskService } from '../services/TaskService';
+import { TaskService } from '../models/services/TaskService';
 
 @Resolver(Task)
 export class TaskResolver {

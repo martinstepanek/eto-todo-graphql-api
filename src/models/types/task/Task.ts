@@ -1,7 +1,7 @@
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../user/User';
-import { Lazy } from '../Lazy';
+import { Lazy } from '../../Lazy';
 import { DateType } from './DateType';
 import { RecurrentType } from './RecurrentType';
 

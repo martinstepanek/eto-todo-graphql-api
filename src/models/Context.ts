@@ -1,4 +1,4 @@
-import { User } from './user/User';
+import { User } from './types/user/User';
 
 export class Context {
     user: User;

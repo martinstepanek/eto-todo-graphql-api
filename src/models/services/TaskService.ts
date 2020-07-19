@@ -1,12 +1,12 @@
 import { Service } from 'typedi';
 import { InjectRepository } from 'typeorm-typedi-extensions';
 import { weekNumber } from 'weeknumber';
-import { TaskRepository } from '../repositories/TaskRepository';
-import { TaskListType } from '../models/task/TaskListType';
-import { Task } from '../models/task/Task';
-import { DateType } from '../models/task/DateType';
+import { TaskRepository } from '../../repositories/TaskRepository';
+import { TaskListType } from '../types/task/TaskListType';
+import { Task } from '../types/task/Task';
+import { DateType } from '../types/task/DateType';
 import { Between } from 'typeorm';
-import { User } from '../models/user/User';
+import { User } from '../types/user/User';
 
 @Service('TaskService')
 export class TaskService {

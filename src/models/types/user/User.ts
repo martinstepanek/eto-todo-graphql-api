@@ -2,7 +2,7 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { UserState } from './UserState';
 import { Task } from '../task/Task';
-import { Lazy } from '../Lazy';
+import { Lazy } from '../../Lazy';
 
 @Entity()
 @ObjectType()

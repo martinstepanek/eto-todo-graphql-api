@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
-import config from '../config';
+import config from '../../config';
 
 @Service('AuthService')
 export class AuthService {
