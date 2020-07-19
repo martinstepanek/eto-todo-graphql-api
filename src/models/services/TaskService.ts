@@ -6,7 +6,7 @@ import { Task } from '../types/task/Task';
 import { DateType } from '../types/task/DateType';
 import { Between } from 'typeorm';
 import { User } from '../types/user/User';
-import {DateHelper} from "../helpers/DateHelper";
+import { DateHelper } from '../helpers/DateHelper';
 
 @Service('TaskService')
 export class TaskService {
@@ -16,19 +16,35 @@ export class TaskService {
         switch (taskListType) {
             case TaskListType.Today:
                 return this.getTasksForToday(forUser);
+            case TaskListType.Tomorrow:
+                return this.getTasksForTomorrow(forUser);
             case TaskListType.ThisWeek:
                 return this.getTasksForThisWeek(forUser);
+            case TaskListType.NextWeek:
+                return this.getTasksForNextWeek(forUser);
             case TaskListType.ThisMonth:
                 return this.getTasksForThisMonth(forUser);
+            case TaskListType.NextMonth:
+                return this.getTasksForNextMonth(forUser);
             default:
                 throw new Error('We are sorry, but this list type is not implemented yet');
         }
     }
 
     private async getTasksForToday(forUser: User): Promise<Task[]> {
-        let today = new Date();
-        let todayStart = Math.floor(new Date().setHours(0, 0, 0, 0) / 1000);
-        let todayEnd = Math.floor(new Date().setHours(23, 59, 59) / 1000);
+        return this.getTasksForDay(forUser, new Date());
+    }
+
+    private async getTasksForTomorrow(forUser: User): Promise<Task[]> {
+        let tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return this.getTasksForDay(forUser, tomorrow);
+    }
+
+    private async getTasksForDay(forUser: User, day: Date): Promise<Task[]> {
+        let today = new Date(day.getTime());
+        let todayStart = Math.floor(new Date(day.getTime()).setHours(0, 0, 0, 0) / 1000);
+        let todayEnd = Math.floor(new Date(day.getTime()).setHours(23, 59, 59) / 1000);
 
         let tasks = await this.taskRepository.find({
             where: {
@@ -52,26 +68,42 @@ export class TaskService {
     }
 
     private async getTasksForThisWeek(forUser: User): Promise<Task[]> {
-        let today = new Date();
+        return this.getTasksForWeek(forUser, new Date());
+    }
+
+    private async getTasksForNextWeek(forUser: User): Promise<Task[]> {
+        let newtWeek = new Date();
+        newtWeek.setDate(newtWeek.getDate() + 7);
+        return this.getTasksForWeek(forUser, newtWeek);
+    }
+
+    private async getTasksForWeek(forUser: User, date: Date): Promise<Task[]> {
         return this.taskRepository.find({
             where: {
                 user: forUser,
                 specificDateType: DateType.Week.toString(),
-                specificDateValue: DateHelper.weekNumber(today),
+                specificDateValue: DateHelper.weekNumber(date),
             },
         });
     }
 
     private async getTasksForThisMonth(forUser: User): Promise<Task[]> {
-        let today = new Date();
+        return this.getTasksForMonth(forUser, new Date());
+    }
+
+    private async getTasksForNextMonth(forUser: User): Promise<Task[]> {
+        let nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        return this.getTasksForMonth(forUser, nextMonth);
+    }
+
+    private async getTasksForMonth(forUser: User, date: Date): Promise<Task[]> {
         return this.taskRepository.find({
             where: {
                 user: forUser,
                 specificDateType: DateType.Month.toString(),
-                specificDateValue: today.getMonth() + 1,
+                specificDateValue: date.getMonth() + 1,
             },
         });
     }
-
-
 }
