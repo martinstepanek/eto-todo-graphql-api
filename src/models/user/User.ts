@@ -1,6 +1,8 @@
 import { Field, ID, ObjectType } from 'type-graphql';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { UserState } from './UserState';
+import { Task } from '../task/Task';
+import { Lazy } from '../Lazy';
 
 @Entity()
 @ObjectType()
@@ -33,4 +35,11 @@ export class User {
 
     @Column('datetime', { default: () => 'CURRENT_TIMESTAMP' })
     public updatedAt: Date;
+
+    @OneToMany(() => Task, task => task.user, {
+        lazy: true,
+        cascade: ['insert'],
+    })
+    @Field(() => [Task])
+    public tasks: Lazy<Task[]>;
 }
