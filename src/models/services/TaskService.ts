@@ -1,12 +1,12 @@
 import { Service } from 'typedi';
 import { InjectRepository } from 'typeorm-typedi-extensions';
-import { weekNumber } from 'weeknumber';
 import { TaskRepository } from '../../repositories/TaskRepository';
 import { TaskListType } from '../types/task/TaskListType';
 import { Task } from '../types/task/Task';
 import { DateType } from '../types/task/DateType';
 import { Between } from 'typeorm';
 import { User } from '../types/user/User';
+import {DateHelper} from "../helpers/DateHelper";
 
 @Service('TaskService')
 export class TaskService {
@@ -43,7 +43,7 @@ export class TaskService {
             tasks = [...tasks, ...(await this.getTasksForThisWeek(forUser))];
         }
 
-        if (today.getDate() === this.daysInMonth(today)) {
+        if (today.getDate() === DateHelper.daysInMonth(today)) {
             // Today is last day of month
             tasks = [...tasks, ...(await this.getTasksForThisMonth(forUser))];
         }
@@ -57,7 +57,7 @@ export class TaskService {
             where: {
                 user: forUser,
                 specificDateType: DateType.Week.toString(),
-                specificDateValue: weekNumber(today),
+                specificDateValue: DateHelper.weekNumber(today),
             },
         });
     }
@@ -73,7 +73,5 @@ export class TaskService {
         });
     }
 
-    private daysInMonth(date: Date): number {
-        return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
-    }
+
 }
