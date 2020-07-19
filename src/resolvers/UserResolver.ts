@@ -1,4 +1,4 @@
-import {Arg, Authorized, Mutation, Query, Resolver} from 'type-graphql';
+import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
 import { User } from '../models/user/User';
 import { UserInput } from '../models/user/UserInput';
 import { UserRepository } from '../repositories/UserRepository';

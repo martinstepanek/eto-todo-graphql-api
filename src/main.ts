@@ -5,6 +5,7 @@ import { Container } from 'typedi';
 import * as TypeORM from 'typeorm';
 import { UserRepository } from './repositories/UserRepository';
 import { Context } from './models/Context';
+import { TaskResolver } from './resolvers/TaskResolver';
 
 /**
  * Bootstrapping function
@@ -19,7 +20,7 @@ async function bootstrap(): Promise<void> {
     };
 
     const schema = await buildSchema({
-        resolvers: [UserResolver],
+        resolvers: [UserResolver, TaskResolver],
 
         container: Container,
         authChecker: customAuthChecker,
