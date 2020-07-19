@@ -25,7 +25,8 @@
     "type-graphql": "^0.17.4",
     "typedi": "^0.8.0",
     "typeorm": "^0.2.18",
-    "utf-8-validate": "^5.0.2"
+    "utf-8-validate": "^5.0.2",
+    "weeknumber": "^1.1.2"
   },
   "devDependencies": {
     "@types/node": "^12.6.8",
