@@ -3,7 +3,6 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../user/User';
 import { Lazy } from '../../Lazy';
 import { DateType } from './DateType';
-import { RecurrentType } from './RecurrentType';
 
 @Entity()
 @ObjectType()
@@ -39,11 +38,8 @@ export class Task {
     @Field({ nullable: true })
     public specificTimeValue: number;
 
-    @Column({ type: 'enum', enum: RecurrentType, nullable: true })
-    @Field({ nullable: true })
-    public recurrentType: RecurrentType;
+    @Column()
+    @Field()
+    public isRecurrent: boolean = false;
 
-    @Column({ nullable: true })
-    @Field({ nullable: true })
-    public recurrentTime: number;
 }

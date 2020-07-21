@@ -1,6 +1,5 @@
 import { Field, InputType } from 'type-graphql';
 import { DateType } from './DateType';
-import { RecurrentType } from './RecurrentType';
 
 @InputType()
 export class TaskInput {
@@ -19,9 +18,6 @@ export class TaskInput {
     @Field({ description: 'Timestamp with hours and minutes after midnight', nullable: true })
     public specificTimeValue: number;
 
-    @Field({ description: '0 - Daily, 1 - Weekly, 2 - Monthly', nullable: true })
-    public recurrentType: RecurrentType;
-
-    @Field({ description: 'weekDay|monthDay', nullable: true })
-    public recurrentTime: number;
+    @Field({ description: 'Is task recurrent?'})
+    public isRecurrent: boolean = false;
 }
