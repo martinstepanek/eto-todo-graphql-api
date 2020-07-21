@@ -7,11 +7,15 @@ import { Context } from '../models/Context';
 import { TaskListType } from '../models/types/task/TaskListType';
 import { Inject } from 'typedi';
 import { TaskService } from '../models/services/TaskService';
+import { TaskEntryDoneInput } from '../models/types/task-entry-done/TaskEntryDoneInput';
+import { TaskEntryDoneRepository } from '../repositories/TaskEntryDoneRepository';
+import { TaskEntryDone } from '../models/types/task-entry-done/TaskEntryDone';
 
 @Resolver(Task)
 export class TaskResolver {
     public constructor(
         @InjectRepository() private readonly taskRepository: TaskRepository,
+        @InjectRepository() private readonly taskEntryDoneRepository: TaskEntryDoneRepository,
         @Inject('TaskService') private readonly taskService: TaskService
     ) {}
 
@@ -27,6 +31,29 @@ export class TaskResolver {
     @Authorized()
     @Query(() => [Task], { description: 'Get tasks by list type' })
     public async getTasks(@Arg('listType') listType: TaskListType, @Ctx() ctx: Context): Promise<Task[]> {
-        return this.taskService.getTasksByListType(listType, ctx.user);
+        return this.taskService.getMarkedTasksByListType(listType, ctx.user);
+    }
+
+    @Authorized()
+    @Mutation(() => Task, { description: 'Mark task as done' })
+    public async markTaskAsDone(
+        @Arg('taskEntryDone') taskEntryDoneInput: TaskEntryDoneInput,
+        @Ctx() ctx: Context
+    ): Promise<Task> {
+        const task = await this.taskRepository.findOne(taskEntryDoneInput.taskId);
+
+        const taskEntryDone = new TaskEntryDone();
+        taskEntryDone.task = task;
+        taskEntryDone.whenDone = new Date(taskEntryDoneInput.whenDone * 1000);
+        await this.taskEntryDoneRepository.save(taskEntryDone);
+
+        task.isDone = true;
+        return task;
+    }
+
+    @Authorized()
+    @Mutation(() => Task, { description: 'Mark task as not done' })
+    public async markTaskAsNotDone(@Arg('taskId') taskId: string, @Ctx() ctx: Context): Promise<void> {
+        await this.taskRepository.findOne(taskId);
     }
 }

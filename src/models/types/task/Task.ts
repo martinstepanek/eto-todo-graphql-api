@@ -1,8 +1,9 @@
 import { Field, ID, ObjectType } from 'type-graphql';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../user/User';
 import { Lazy } from '../../Lazy';
 import { DateType } from './DateType';
+import { TaskEntryDone } from '../task-entry-done/TaskEntryDone';
 
 @Entity()
 @ObjectType()
@@ -42,4 +43,11 @@ export class Task {
     @Field()
     public isRecurrent: boolean = false;
 
+    @OneToMany(() => TaskEntryDone, taskEntryDone => taskEntryDone.task, {
+        lazy: true,
+    })
+    public taskEntriesDone: Lazy<TaskEntryDone[]>;
+
+    @Field()
+    public isDone: boolean = false;
 }
