@@ -1,11 +1,13 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Lazy } from '../../Lazy';
 import { Task } from '../task/Task';
+import { Field } from 'type-graphql';
+import { TaskEntryType } from './TaskEntryType';
 
 @Entity()
-export class TaskEntryDone {
+export class TaskEntry {
     @PrimaryGeneratedColumn('uuid')
-    public taskEntryDoneId: string;
+    public taskEntryId: string;
 
     @ManyToOne(() => Task, task => task.taskEntriesDone, {
         lazy: true,
@@ -18,4 +20,8 @@ export class TaskEntryDone {
 
     @Column('datetime', { default: () => 'CURRENT_TIMESTAMP' })
     public whenRealDone: Date;
+
+    @Column({ type: 'enum', enum: TaskEntryType })
+    @Field()
+    public type: TaskEntryType;
 }

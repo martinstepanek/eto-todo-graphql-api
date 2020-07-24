@@ -7,17 +7,17 @@ import { DateType } from '../types/task/DateType';
 import { Between } from 'typeorm';
 import { User } from '../types/user/User';
 import { DateHelper } from '../helpers/DateHelper';
-import { TaskEntryDoneService } from './TaskEntryDoneService';
+import { TaskEntryService } from './TaskEntryService';
 
 @Service('TaskService')
 export class TaskService {
     constructor(
         @InjectRepository() private readonly taskRepository: TaskRepository,
-        @Inject('TaskEntryDoneService') private readonly taskEntryDoneService: TaskEntryDoneService
+        @Inject('TaskEntryService') private readonly taskEntryService: TaskEntryService
     ) {}
 
     public async getMarkedTasksByListType(taskListType: TaskListType, forUser: User): Promise<Task[]> {
-        return this.taskEntryDoneService.markDoneFor(await this.getTasksByListType(taskListType, forUser), taskListType);
+        return this.taskEntryService.markDoneFor(await this.getTasksByListType(taskListType, forUser), taskListType);
     }
 
     private async getTasksByListType(taskListType: TaskListType, forUser: User): Promise<Task[]> {

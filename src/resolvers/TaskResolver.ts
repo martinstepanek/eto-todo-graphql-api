@@ -7,15 +7,16 @@ import { Context } from '../models/Context';
 import { TaskListType } from '../models/types/task/TaskListType';
 import { Inject } from 'typedi';
 import { TaskService } from '../models/services/TaskService';
-import { TaskEntryDoneInput } from '../models/types/task-entry-done/TaskEntryDoneInput';
-import { TaskEntryDoneRepository } from '../repositories/TaskEntryDoneRepository';
-import { TaskEntryDone } from '../models/types/task-entry-done/TaskEntryDone';
+import { TaskEntryInput } from '../models/types/task-entry/TaskEntryInput';
+import { TaskEntryRepository } from '../repositories/TaskEntryRepository';
+import { TaskEntry } from '../models/types/task-entry/TaskEntry';
+import { TaskEntryType } from '../models/types/task-entry/TaskEntryType';
 
 @Resolver(Task)
 export class TaskResolver {
     public constructor(
         @InjectRepository() private readonly taskRepository: TaskRepository,
-        @InjectRepository() private readonly taskEntryDoneRepository: TaskEntryDoneRepository,
+        @InjectRepository() private readonly taskEntryRepository: TaskEntryRepository,
         @Inject('TaskService') private readonly taskService: TaskService
     ) {}
 
@@ -36,16 +37,14 @@ export class TaskResolver {
 
     @Authorized()
     @Mutation(() => Task, { description: 'Mark task as done' })
-    public async markTaskAsDone(
-        @Arg('taskEntryDone') taskEntryDoneInput: TaskEntryDoneInput,
-        @Ctx() ctx: Context
-    ): Promise<Task> {
-        const task = await this.taskRepository.findOne(taskEntryDoneInput.taskId);
+    public async markTaskAsDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput, @Ctx() ctx: Context): Promise<Task> {
+        const task = await this.taskRepository.findOne(taskEntryInput.taskId);
 
-        const taskEntryDone = new TaskEntryDone();
-        taskEntryDone.task = task;
-        taskEntryDone.whenDone = new Date(taskEntryDoneInput.whenDone * 1000);
-        await this.taskEntryDoneRepository.save(taskEntryDone);
+        const taskEntry = new TaskEntry();
+        taskEntry.task = task;
+        taskEntry.whenDone = new Date(taskEntryInput.whenDone * 1000);
+        taskEntry.type = TaskEntryType.Done;
+        await this.taskEntryRepository.save(taskEntry);
 
         task.isDone = true;
         return task;

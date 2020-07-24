@@ -1,7 +1,7 @@
 import { Field, InputType } from 'type-graphql';
 
 @InputType()
-export class TaskEntryDoneInput {
+export class TaskEntryInput {
     @Field({ description: "Task's id" })
     public taskId: string;
 

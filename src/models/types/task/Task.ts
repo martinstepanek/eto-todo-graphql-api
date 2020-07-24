@@ -3,7 +3,7 @@ import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'ty
 import { User } from '../user/User';
 import { Lazy } from '../../Lazy';
 import { DateType } from './DateType';
-import { TaskEntryDone } from '../task-entry-done/TaskEntryDone';
+import { TaskEntry } from '../task-entry/TaskEntry';
 
 @Entity()
 @ObjectType()
@@ -43,11 +43,14 @@ export class Task {
     @Field()
     public isRecurrent: boolean = false;
 
-    @OneToMany(() => TaskEntryDone, taskEntryDone => taskEntryDone.task, {
+    @OneToMany(() => TaskEntry, taskEntryDone => taskEntryDone.task, {
         lazy: true,
     })
-    public taskEntriesDone: Lazy<TaskEntryDone[]>;
+    public taskEntriesDone: Lazy<TaskEntry[]>;
 
     @Field()
     public isDone: boolean = false;
+
+    @Field()
+    public isDelayed: boolean = false;
 }

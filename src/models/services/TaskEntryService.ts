@@ -2,14 +2,15 @@ import { Service } from 'typedi';
 import { InjectRepository } from 'typeorm-typedi-extensions';
 import { TaskListType } from '../types/task/TaskListType';
 import { Task } from '../types/task/Task';
-import { TaskEntryDoneRepository } from '../../repositories/TaskEntryDoneRepository';
+import { TaskEntryRepository } from '../../repositories/TaskEntryRepository';
 import { DateType } from '../types/task/DateType';
 import { Between } from 'typeorm';
 import { DateHelper } from '../helpers/DateHelper';
+import { TaskEntryType } from '../types/task-entry/TaskEntryType';
 
-@Service('TaskEntryDoneService')
-export class TaskEntryDoneService {
-    constructor(@InjectRepository() private readonly taskEntryDoneRepository: TaskEntryDoneRepository) {}
+@Service('TaskEntryService')
+export class TaskEntryService {
+    constructor(@InjectRepository() private readonly taskEntryDoneRepository: TaskEntryRepository) {}
 
     public async markDoneFor(tasks: Task[], taskListType: TaskListType): Promise<Task[]> {
         const date = DateHelper.getDateForListType(taskListType);
@@ -51,7 +52,8 @@ export class TaskEntryDoneService {
                     whenDone: Between(new Date(start), new Date(end)),
                 },
             });
-            task.isDone = !!entry
+            task.isDone = !!entry && entry.type === TaskEntryType.Done;
+            task.isDelayed = !!entry && entry.type === TaskEntryType.Delayed;
         }
 
         return tasks;
