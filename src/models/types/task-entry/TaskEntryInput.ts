@@ -5,6 +5,6 @@ export class TaskEntryInput {
     @Field({ description: "Task's id" })
     public taskId: string;
 
-    @Field({ description: 'When was task done' })
-    public whenDone: number;
+    @Field(() => Date, { description: 'When was task done' })
+    public whenDone: Date;
 }

@@ -31,7 +31,7 @@ export class TaskResolver {
 
     @Authorized()
     @Query(() => [Task], { description: 'Get tasks by list type' })
-    public async getTasks(@Arg('listType') listType: TaskListType, @Ctx() ctx: Context): Promise<Task[]> {
+    public async getTasks(@Arg('listType', () => TaskListType) listType: TaskListType, @Ctx() ctx: Context): Promise<Task[]> {
         return this.taskService.getMarkedTasksByListType(listType, ctx.userIdentity.user);
     }
 
@@ -42,7 +42,7 @@ export class TaskResolver {
 
         const taskEntry = new TaskEntry();
         taskEntry.task = task;
-        taskEntry.whenDone = new Date(taskEntryInput.whenDone * 1000);
+        taskEntry.whenDone = taskEntryInput.whenDone;
         taskEntry.type = TaskEntryType.Done;
         await this.taskEntryRepository.save(taskEntry);
 

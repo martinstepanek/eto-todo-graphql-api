@@ -70,7 +70,10 @@ export class TaskService {
             where: {
                 user: forUser,
                 specificDateType: DateType.Week.toString(),
-                specificDateValue: DateHelper.weekNumber(date),
+                specificDateValue: Between(
+                    DateHelper.getStartOfPeriod(date, DateType.Week),
+                    DateHelper.getEndOfPeriod(date, DateType.Week)
+                ),
             },
         });
     }
@@ -80,7 +83,10 @@ export class TaskService {
             where: {
                 user: forUser,
                 specificDateType: DateType.Month.toString(),
-                specificDateValue: date.getMonth() + 1,
+                specificDateValue: Between(
+                    DateHelper.getStartOfPeriod(date, DateType.Month),
+                    DateHelper.getEndOfPeriod(date, DateType.Month)
+                )
             },
         });
     }

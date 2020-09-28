@@ -1,4 +1,4 @@
-import { Field, InputType } from 'type-graphql';
+import { Field, InputType, Int } from 'type-graphql';
 import { DateType } from './DateType';
 
 @InputType()
@@ -9,13 +9,13 @@ export class TaskInput {
     @Field({ description: "Task's detail", nullable: true })
     public detail: string;
 
-    @Field({ description: '0 - Date, 1 - Week, 2 - Month' })
+    @Field(() => DateType)
     public specificDateType: DateType;
 
-    @Field({ description: 'timestamp|weekNumber|monthNumber' })
-    public specificDateValue: number;
+    @Field(() => Date, { description: 'Current datetime' })
+    public specificDateValue: Date;
 
-    @Field({ description: 'Timestamp with hours and minutes after midnight', nullable: true })
+    @Field(() => Int, { description: 'Datetime with hours and minutes after midnight', nullable: true })
     public specificTimeValue: number;
 
     @Field({ description: 'Is task recurrent?'})

@@ -31,9 +31,9 @@ export class Task {
     @Field()
     public specificDateType: DateType;
 
-    @Column()
-    @Field()
-    public specificDateValue: number;
+    @Column('datetime')
+    @Field(() => Date)
+    public specificDateValue: Date;
 
     @Column({ nullable: true })
     @Field({ nullable: true })
