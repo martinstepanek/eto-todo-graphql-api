@@ -24,7 +24,7 @@ export class TaskResolver {
     @Mutation(() => Task, { description: 'Create new task' })
     public async createTask(@Arg('task') taskInput: TaskInput, @Ctx() ctx: Context): Promise<Task> {
         const task = this.taskRepository.create(taskInput);
-        task.user = ctx.user;
+        task.user = ctx.userIdentity.user;
         await this.taskRepository.save(task);
         return await this.taskRepository.findOne(task.taskId);
     }
@@ -32,7 +32,7 @@ export class TaskResolver {
     @Authorized()
     @Query(() => [Task], { description: 'Get tasks by list type' })
     public async getTasks(@Arg('listType') listType: TaskListType, @Ctx() ctx: Context): Promise<Task[]> {
-        return this.taskService.getMarkedTasksByListType(listType, ctx.user);
+        return this.taskService.getMarkedTasksByListType(listType, ctx.userIdentity.user);
     }
 
     @Authorized()

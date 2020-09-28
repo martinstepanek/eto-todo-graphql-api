@@ -1,11 +1,19 @@
-import { GraphQLServer } from 'graphql-yoga';
-import { AuthChecker, buildSchema, UnauthorizedError } from 'type-graphql';
+import { buildSchema } from 'type-graphql';
 import { UserResolver } from './resolvers';
 import { Container } from 'typedi';
 import * as TypeORM from 'typeorm';
-import { UserRepository } from './repositories/UserRepository';
-import { Context } from './models/Context';
 import { TaskResolver } from './resolvers/TaskResolver';
+import { contextFactory } from './bootstrap/contextFactory';
+import { errorFormatter } from './bootstrap/errorFormatter';
+import express from 'express';
+import { authChecker } from './bootstrap/authChecker';
+import * as Sentry from '@sentry/node';
+import { registerEnumsToSchema } from './bootstrap/registerEnumsToSchema';
+import createMetricsPlugin from 'apollo-metrics';
+import { register as registerPrometheusClient } from 'prom-client';
+import config from './config';
+import { ApolloServer } from 'apollo-server-express';
+import { apolloServerSentryPlugin } from './bootstrap/apolloServerSentryPlugin';
 
 /**
  * Bootstrapping function
@@ -15,40 +23,45 @@ async function bootstrap(): Promise<void> {
 
     await TypeORM.createConnection();
 
-    const customAuthChecker: AuthChecker<Context> = ({ root, args, context, info }, roles) => {
-        return context.user !== null;
-    };
+    registerEnumsToSchema();
 
     const schema = await buildSchema({
         resolvers: [UserResolver, TaskResolver],
 
         container: Container,
-        authChecker: customAuthChecker,
+        authChecker: authChecker,
     });
 
-    const server = new GraphQLServer({
+    // Express app
+    const app = express();
+
+    app.use(Sentry.Handlers.requestHandler());
+
+    // Setup /graphql/metrics endpoint for prometheus
+    app.get('/graphql/metrics', (_, res) => res.send(registerPrometheusClient.metrics()));
+    const apolloMetricsPlugin = createMetricsPlugin(registerPrometheusClient);
+
+    const isEnvDev = config.environment === 'dev';
+
+    // Apollo server
+    const server = new ApolloServer({
         schema,
-        context: async ({ request }): Promise<Context> => {
-            const accessToken = request.header('Access-Token');
-            if (!accessToken) {
-                return { user: null };
-            }
+        context: contextFactory,
+        formatError: errorFormatter,
+        debug: isEnvDev,
+        introspection: isEnvDev,
+        playground: isEnvDev,
 
-            const userRepository = TypeORM.getCustomRepository(UserRepository);
-            const user = await userRepository.findOne({
-                where: {
-                    accessToken,
-                },
-            });
-
-            if (accessToken && !user) {
-                throw new UnauthorizedError();
-            }
-
-            return { user };
-        },
+        // @ts-ignore
+        plugins: [apolloMetricsPlugin, apolloServerSentryPlugin],
+        tracing: true,
     });
-    server.start(() => console.log(`Server is running on http://localhost:4000`));
+
+    server.applyMiddleware({ app });
+
+    app.listen({ port: 4000 }, () => {
+        console.log(`Server ready at http://localhost:4000${server.graphqlPath}`);
+    });
 }
 
 bootstrap();

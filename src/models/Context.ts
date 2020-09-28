@@ -1,5 +1,7 @@
-import { User } from './types/user/User';
+import { UserIdentity } from './types/user/UserIdentity';
+import { Request } from 'express';
 
 export class Context {
-    user: User;
+    public userIdentity: UserIdentity;
+    public req: Request;
 }

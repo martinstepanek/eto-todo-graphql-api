@@ -3,6 +3,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { UserState } from './UserState';
 import { Task } from '../task/Task';
 import { Lazy } from '../../Lazy';
+import { UserSentryInformation } from './UserSentryInformation';
 
 @Entity()
 @ObjectType()
@@ -42,4 +43,8 @@ export class User {
     })
     @Field(() => [Task])
     public tasks: Lazy<Task[]>;
+
+    public getSentryInformation(): UserSentryInformation {
+        return new UserSentryInformation(this.userId, this.email);
+    }
 }
