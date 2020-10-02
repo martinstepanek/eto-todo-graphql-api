@@ -11,6 +11,8 @@ import { TaskEntryInput } from '../models/types/task-entry/TaskEntryInput';
 import { TaskEntryRepository } from '../repositories/TaskEntryRepository';
 import { TaskEntry } from '../models/types/task-entry/TaskEntry';
 import { TaskEntryType } from '../models/types/task-entry/TaskEntryType';
+import { DateHelper } from '../models/helpers/DateHelper';
+import { Between } from 'typeorm';
 
 @Resolver(Task)
 export class TaskResolver {
@@ -42,7 +44,7 @@ export class TaskResolver {
 
         const taskEntry = new TaskEntry();
         taskEntry.task = task;
-        taskEntry.whenDone = taskEntryInput.whenDone;
+        taskEntry.whenDone = taskEntryInput.when;
         taskEntry.type = TaskEntryType.Done;
         await this.taskEntryRepository.save(taskEntry);
 
@@ -52,7 +54,20 @@ export class TaskResolver {
 
     @Authorized()
     @Mutation(() => Task, { description: 'Mark task as not done' })
-    public async markTaskAsNotDone(@Arg('taskId') taskId: string, @Ctx() ctx: Context): Promise<void> {
-        await this.taskRepository.findOne(taskId);
+    public async markTaskAsNotDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput, @Ctx() ctx: Context): Promise<Task> {
+        const task = await this.taskRepository.findOne(taskEntryInput.taskId);
+        
+        const start = DateHelper.getStartOfPeriod(taskEntryInput.when, task.specificDateType);
+        const end = DateHelper.getEndOfPeriod(taskEntryInput.when, task.specificDateType);
+
+        const taskEntry = await this.taskEntryRepository.find({
+            where: {
+                task,
+                whenDone: Between(start, end),
+            }
+        });
+
+        await this.taskEntryRepository.remove(taskEntry);
+        return task;
     }
 }
