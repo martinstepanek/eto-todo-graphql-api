@@ -12,9 +12,11 @@ import { TaskEntryRepository } from '../repositories/TaskEntryRepository';
 import { TaskEntry } from '../models/types/task-entry/TaskEntry';
 import { TaskEntryType } from '../models/types/task-entry/TaskEntryType';
 import { DateHelper } from '../models/helpers/DateHelper';
-import { Between } from 'typeorm';
+import { Between, IsNull } from 'typeorm';
 import { TaskEntryDelayInput } from '../models/types/task-entry/TaskEntryDelayInput';
 import { TaskEntryService } from '../models/services/TaskEntryService';
+import { DateType } from '../models/types/task/DateType';
+import { TaskEntryDeleteInput } from '../models/types/task-entry/TaskEntryDeleteInput';
 
 @Resolver(Task)
 export class TaskResolver {
@@ -28,6 +30,14 @@ export class TaskResolver {
     @Authorized()
     @Mutation(() => Task, { description: 'Create new task' })
     public async createTask(@Arg('task') taskInput: TaskInput, @Ctx() ctx: Context): Promise<Task> {
+        // TODO: add custom validator
+        if (taskInput.isRecurrent && taskInput.recurrentDateValue == null && taskInput.specificDateType !== DateType.Date) {
+            throw new Error('When task is recurrent, recurrentDateValue is required (exception is when specificDateType=Date)');
+        }
+        if (!taskInput.isRecurrent && taskInput.specificDateValue == null) {
+            throw new Error('When task is not recurrent, specificDateValue is required');
+        }
+
         const task = this.taskRepository.create(taskInput);
         task.user = ctx.userIdentity.user;
         await this.taskRepository.save(task);
@@ -36,8 +46,25 @@ export class TaskResolver {
 
     @Authorized()
     @Mutation(() => Task, { nullable: true, description: 'Edit existing task' })
-    public async editTask(@Arg('taskId') taskId: string, @Arg('task') taskInput: TaskInput, @Ctx() ctx: Context): Promise<Task> {
-        const task = await this.taskRepository.findOne(taskId);
+    public async editTask(
+        @Arg('taskId') taskId: string,
+        @Arg('task') taskInput: TaskInput,
+        @Ctx() ctx: Context
+    ): Promise<Task> {
+        // TODO: add custom validator
+        if (taskInput.isRecurrent && taskInput.recurrentDateValue == null) {
+            throw new Error('When task is recurrent, recurrentDateValue is required');
+        }
+        if (!taskInput.isRecurrent && taskInput.specificDateValue == null) {
+            throw new Error('When task is not recurrent, specificDateValue is required');
+        }
+
+        const task = await this.taskRepository.findOne({
+            where: {
+                taskId,
+                deletedAt: IsNull(),
+            }
+        });
         if (!task) {
             return null;
         }
@@ -65,7 +92,12 @@ export class TaskResolver {
     @Authorized()
     @Mutation(() => Task, { nullable: true, description: 'Mark task as done' })
     public async markTaskAsDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<Task> {
-        const task = await this.taskRepository.findOne(taskEntryInput.taskId);
+        const task = await this.taskRepository.findOne({
+            where: {
+                taskId: taskEntryInput.taskId,
+                deletedAt: IsNull(),
+            }
+        });
         if (!task) {
             return null;
         }
@@ -88,7 +120,12 @@ export class TaskResolver {
     @Authorized()
     @Mutation(() => Task, { nullable: true, description: 'Mark task as not done' })
     public async markTaskAsNotDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<Task> {
-        const task = await this.taskRepository.findOne(taskEntryInput.taskId);
+        const task = await this.taskRepository.findOne({
+            where: {
+                taskId: taskEntryInput.taskId,
+                deletedAt: IsNull(),
+            }
+        });
         if (!task) {
             return null;
         }
@@ -113,7 +150,12 @@ export class TaskResolver {
         @Arg('taskEntryDelay') taskEntryDelayInput: TaskEntryDelayInput,
         @Ctx() ctx: Context
     ): Promise<Task> {
-        const task = await this.taskRepository.findOne(taskEntryDelayInput.taskId);
+        const task = await this.taskRepository.findOne({
+            where: {
+                taskId: taskEntryDelayInput.taskId,
+                deletedAt: IsNull(),
+            }
+        });
         if (!task) {
             return null;
         }
@@ -145,26 +187,33 @@ export class TaskResolver {
 
     @Authorized()
     @Mutation(() => Task, { nullable: true, description: 'Mark task as done' })
-    public async deleteTask(
-        @Arg('taskEntryDelay') taskEntryInput: TaskEntryInput,
-        @Ctx() ctx: Context
-    ): Promise<Task> {
-        const task = await this.taskRepository.findOne(taskEntryInput.taskId);
+    public async deleteTask(@Arg('taskEntryDelay') taskEntryDeleteInput: TaskEntryDeleteInput, @Ctx() ctx: Context): Promise<Task> {
+        const task = await this.taskRepository.findOne({
+            where: {
+                taskId: taskEntryDeleteInput.taskId,
+                deletedAt: IsNull(),
+            }
+        });
         if (!task) {
             return null;
         }
 
-        const entry = await this.taskEntryService.findEntry(task, taskEntryInput.when);
+        const entry = await this.taskEntryService.findEntry(task, taskEntryDeleteInput.when);
         // done tasks can be deleted
         if (entry && entry.type !== TaskEntryType.Done) {
             return task;
         }
 
-        const taskEntry = new TaskEntry();
-        taskEntry.task = task;
-        taskEntry.whenDone = taskEntryInput.when;
-        taskEntry.type = TaskEntryType.Deleted;
-        await this.taskEntryRepository.save(taskEntry);
+        if (task.isRecurrent && taskEntryDeleteInput.allRecurringTasks) {
+            task.deletedAt = new Date()
+            await this.taskRepository.save(task);
+        } else {
+            const taskEntry = new TaskEntry();
+            taskEntry.task = task;
+            taskEntry.whenDone = taskEntryDeleteInput.when;
+            taskEntry.type = TaskEntryType.Deleted;
+            await this.taskEntryRepository.save(taskEntry);
+        }
 
         task.isDeleted = true;
         return task;

@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, Int, ObjectType } from 'type-graphql';
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../user/User';
 import { Lazy } from '../../Lazy';
@@ -12,10 +12,14 @@ export class Task {
     @Field(() => ID)
     public taskId: string;
 
-    @ManyToOne(() => User, user => user.tasks, {
-        lazy: true,
-        nullable: false,
-    })
+    @ManyToOne(
+        () => User,
+        user => user.tasks,
+        {
+            lazy: true,
+            nullable: false,
+        }
+    )
     @Field(() => User)
     public user: Lazy<User>;
 
@@ -31,8 +35,8 @@ export class Task {
     @Field(() => DateType)
     public specificDateType: DateType;
 
-    @Column('datetime')
-    @Field(() => Date)
+    @Column('datetime', { nullable: true })
+    @Field(() => Date, { nullable: true })
     public specificDateValue: Date;
 
     @Column({ nullable: true })
@@ -43,9 +47,23 @@ export class Task {
     @Field()
     public isRecurrent: boolean = false;
 
-    @OneToMany(() => TaskEntry, taskEntry => taskEntry.task, {
-        lazy: true,
-    })
+    @Column({ nullable: true })
+    @Field(() => Int, { nullable: true })
+    public recurrentDateValue: number;
+
+    @Column('datetime', { default: () => 'CURRENT_TIMESTAMP' })
+    public createdAt: Date;
+
+    @Column('datetime', { nullable: true })
+    public deletedAt: Date;
+
+    @OneToMany(
+        () => TaskEntry,
+        taskEntry => taskEntry.task,
+        {
+            lazy: true,
+        }
+    )
     public taskEntries: Lazy<TaskEntry[]>;
 
     @Field()

@@ -10,7 +10,7 @@ import { TaskEntry } from '../types/task-entry/TaskEntry';
 
 @Service('TaskEntryService')
 export class TaskEntryService {
-    constructor(@InjectRepository() private readonly taskEntryDoneRepository: TaskEntryRepository) {}
+    constructor(@InjectRepository() private readonly taskEntryRepository: TaskEntryRepository) {}
 
     public async markFor(tasks: Task[], taskListType: TaskListType): Promise<Task[]> {
         const date = DateHelper.getDateForListType(taskListType);
@@ -30,7 +30,7 @@ export class TaskEntryService {
         const start = DateHelper.getStartOfPeriod(date, task.specificDateType);
         let end = DateHelper.getEndOfPeriod(date, task.specificDateType);
 
-        return await this.taskEntryDoneRepository.findOne({
+        return await this.taskEntryRepository.findOne({
             where: {
                 task,
                 whenDone: Between(start, end),
