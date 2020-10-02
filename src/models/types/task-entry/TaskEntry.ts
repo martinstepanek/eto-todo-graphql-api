@@ -9,10 +9,14 @@ export class TaskEntry {
     @PrimaryGeneratedColumn('uuid')
     public taskEntryId: string;
 
-    @ManyToOne(() => Task, task => task.taskEntries, {
-        lazy: true,
-        nullable: false,
-    })
+    @ManyToOne(
+        () => Task,
+        task => task.taskEntries,
+        {
+            lazy: true,
+            nullable: false,
+        }
+    )
     public task: Lazy<Task>;
 
     @Column('datetime', { default: () => 'CURRENT_TIMESTAMP' })

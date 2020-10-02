@@ -18,9 +18,12 @@ export class TaskInput {
     @Field(() => Int, { description: 'Datetime with hours and minutes after midnight', nullable: true })
     public specificTimeValue: number;
 
-    @Field({ description: 'Is task recurrent?'})
+    @Field({ description: 'Is task recurrent?' })
     public isRecurrent: boolean = false;
 
-    @Field(() => Int, { nullable: true, description: 'When specificDateType=Week: day in week (1-7), When specificDateType=Month: Day in month (1-31)' })
+    @Field(() => Int, {
+        nullable: true,
+        description: 'When specificDateType=Week: day in week (1-7), When specificDateType=Month: Day in month (1-31)',
+    })
     public recurrentDateValue: number;
 }

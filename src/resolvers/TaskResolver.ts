@@ -31,8 +31,14 @@ export class TaskResolver {
     @Mutation(() => Task, { description: 'Create new task' })
     public async createTask(@Arg('task') taskInput: TaskInput, @Ctx() ctx: Context): Promise<Task> {
         // TODO: add custom validator
-        if (taskInput.isRecurrent && taskInput.recurrentDateValue == null && taskInput.specificDateType !== DateType.Date) {
-            throw new Error('When task is recurrent, recurrentDateValue is required (exception is when specificDateType=Date)');
+        if (
+            taskInput.isRecurrent &&
+            taskInput.recurrentDateValue == null &&
+            taskInput.specificDateType !== DateType.Date
+        ) {
+            throw new Error(
+                'When task is recurrent, recurrentDateValue is required (exception is when specificDateType=Date)'
+            );
         }
         if (!taskInput.isRecurrent && taskInput.specificDateValue == null) {
             throw new Error('When task is not recurrent, specificDateValue is required');
@@ -63,7 +69,7 @@ export class TaskResolver {
             where: {
                 taskId,
                 deletedAt: IsNull(),
-            }
+            },
         });
         if (!task) {
             return null;
@@ -96,7 +102,7 @@ export class TaskResolver {
             where: {
                 taskId: taskEntryInput.taskId,
                 deletedAt: IsNull(),
-            }
+            },
         });
         if (!task) {
             return null;
@@ -124,7 +130,7 @@ export class TaskResolver {
             where: {
                 taskId: taskEntryInput.taskId,
                 deletedAt: IsNull(),
-            }
+            },
         });
         if (!task) {
             return null;
@@ -154,7 +160,7 @@ export class TaskResolver {
             where: {
                 taskId: taskEntryDelayInput.taskId,
                 deletedAt: IsNull(),
-            }
+            },
         });
         if (!task) {
             return null;
@@ -187,12 +193,15 @@ export class TaskResolver {
 
     @Authorized()
     @Mutation(() => Task, { nullable: true, description: 'Mark task as done' })
-    public async deleteTask(@Arg('taskEntryDelay') taskEntryDeleteInput: TaskEntryDeleteInput, @Ctx() ctx: Context): Promise<Task> {
+    public async deleteTask(
+        @Arg('taskEntryDelay') taskEntryDeleteInput: TaskEntryDeleteInput,
+        @Ctx() ctx: Context
+    ): Promise<Task> {
         const task = await this.taskRepository.findOne({
             where: {
                 taskId: taskEntryDeleteInput.taskId,
                 deletedAt: IsNull(),
-            }
+            },
         });
         if (!task) {
             return null;
@@ -205,7 +214,7 @@ export class TaskResolver {
         }
 
         if (task.isRecurrent && taskEntryDeleteInput.allRecurringTasks) {
-            task.deletedAt = new Date()
+            task.deletedAt = new Date();
             await this.taskRepository.save(task);
         } else {
             const taskEntry = new TaskEntry();

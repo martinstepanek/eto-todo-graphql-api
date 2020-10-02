@@ -37,10 +37,14 @@ export class User {
     @Column('datetime', { default: () => 'CURRENT_TIMESTAMP' })
     public updatedAt: Date;
 
-    @OneToMany(() => Task, task => task.user, {
-        lazy: true,
-        cascade: ['insert'],
-    })
+    @OneToMany(
+        () => Task,
+        task => task.user,
+        {
+            lazy: true,
+            cascade: ['insert'],
+        }
+    )
     @Field(() => [Task])
     public tasks: Lazy<Task[]>;
 
