@@ -14,13 +14,15 @@ import { TaskEntryType } from '../models/types/task-entry/TaskEntryType';
 import { DateHelper } from '../models/helpers/DateHelper';
 import { Between } from 'typeorm';
 import { TaskEntryDelayInput } from '../models/types/task-entry/TaskEntryDelayInput';
+import { TaskEntryService } from '../models/services/TaskEntryService';
 
 @Resolver(Task)
 export class TaskResolver {
     public constructor(
         @InjectRepository() private readonly taskRepository: TaskRepository,
         @InjectRepository() private readonly taskEntryRepository: TaskEntryRepository,
-        @Inject('TaskService') private readonly taskService: TaskService
+        @Inject('TaskService') private readonly taskService: TaskService,
+        @Inject('TaskEntryService') private readonly taskEntryService: TaskEntryService
     ) {}
 
     @Authorized()
@@ -34,14 +36,25 @@ export class TaskResolver {
 
     @Authorized()
     @Query(() => [Task], { description: 'Get tasks by list type' })
-    public async getTasks(@Arg('listType', () => TaskListType) listType: TaskListType, @Ctx() ctx: Context): Promise<Task[]> {
+    public async getTasks(
+        @Arg('listType', () => TaskListType) listType: TaskListType,
+        @Ctx() ctx: Context
+    ): Promise<Task[]> {
         return this.taskService.getMarkedTasksByListType(listType, ctx.userIdentity.user);
     }
 
     @Authorized()
-    @Mutation(() => Task, { description: 'Mark task as done' })
+    @Mutation(() => Task, { nullable: true, description: 'Mark task as done' })
     public async markTaskAsDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<Task> {
         const task = await this.taskRepository.findOne(taskEntryInput.taskId);
+        if (!task) {
+            return null;
+        }
+
+        const entry = await this.taskEntryService.findEntry(task, taskEntryInput.when);
+        if (entry) {
+            return task;
+        }
 
         const taskEntry = new TaskEntry();
         taskEntry.task = task;
@@ -54,10 +67,13 @@ export class TaskResolver {
     }
 
     @Authorized()
-    @Mutation(() => Task, { description: 'Mark task as not done' })
+    @Mutation(() => Task, { nullable: true, description: 'Mark task as not done' })
     public async markTaskAsNotDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<Task> {
         const task = await this.taskRepository.findOne(taskEntryInput.taskId);
-        
+        if (!task) {
+            return null;
+        }
+
         const start = DateHelper.getStartOfPeriod(taskEntryInput.when, task.specificDateType);
         const end = DateHelper.getEndOfPeriod(taskEntryInput.when, task.specificDateType);
 
@@ -65,7 +81,7 @@ export class TaskResolver {
             where: {
                 task,
                 whenDone: Between(start, end),
-            }
+            },
         });
 
         await this.taskEntryRepository.remove(taskEntry);
@@ -73,9 +89,20 @@ export class TaskResolver {
     }
 
     @Authorized()
-    @Mutation(() => Task, { description: 'Mark task as done' })
-    public async delayTask(@Arg('taskEntryDelay') taskEntryDelayInput: TaskEntryDelayInput, @Ctx() ctx: Context): Promise<Task> {
+    @Mutation(() => Task, { nullable: true, description: 'Mark task as done' })
+    public async delayTask(
+        @Arg('taskEntryDelay') taskEntryDelayInput: TaskEntryDelayInput,
+        @Ctx() ctx: Context
+    ): Promise<Task> {
         const task = await this.taskRepository.findOne(taskEntryDelayInput.taskId);
+        if (!task) {
+            return null;
+        }
+
+        const entry = await this.taskEntryService.findEntry(task, taskEntryDelayInput.when);
+        if (entry) {
+            return task;
+        }
 
         const taskEntry = new TaskEntry();
         taskEntry.task = task;
@@ -96,5 +123,4 @@ export class TaskResolver {
 
         return task;
     }
-
 }

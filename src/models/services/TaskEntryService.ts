@@ -6,6 +6,7 @@ import { TaskEntryRepository } from '../../repositories/TaskEntryRepository';
 import { Between } from 'typeorm';
 import { DateHelper } from '../helpers/DateHelper';
 import { TaskEntryType } from '../types/task-entry/TaskEntryType';
+import { TaskEntry } from '../types/task-entry/TaskEntry';
 
 @Service('TaskEntryService')
 export class TaskEntryService {
@@ -15,20 +16,24 @@ export class TaskEntryService {
         const date = DateHelper.getDateForListType(taskListType);
 
         for (const task of tasks) {
-            // TODO: refactor it
-            const start = DateHelper.getStartOfPeriod(date, task.specificDateType);
-            let end = DateHelper.getEndOfPeriod(date, task.specificDateType);
+            const entry = await this.findEntry(task, date);
 
-            const entry = await this.taskEntryDoneRepository.findOne({
-                where: {
-                    task,
-                    whenDone: Between(start, end),
-                },
-            });
             task.isDone = !!entry && entry.type === TaskEntryType.Done;
             task.isDelayed = !!entry && entry.type === TaskEntryType.Delayed;
         }
 
         return tasks;
+    }
+
+    public async findEntry(task: Task, date: Date): Promise<TaskEntry> {
+        const start = DateHelper.getStartOfPeriod(date, task.specificDateType);
+        let end = DateHelper.getEndOfPeriod(date, task.specificDateType);
+
+        return await this.taskEntryDoneRepository.findOne({
+            where: {
+                task,
+                whenDone: Between(start, end),
+            },
+        });
     }
 }
