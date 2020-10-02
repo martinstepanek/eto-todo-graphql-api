@@ -43,10 +43,10 @@ export class Task {
     @Field()
     public isRecurrent: boolean = false;
 
-    @OneToMany(() => TaskEntry, taskEntryDone => taskEntryDone.task, {
+    @OneToMany(() => TaskEntry, taskEntry => taskEntry.task, {
         lazy: true,
     })
-    public taskEntriesDone: Lazy<TaskEntry[]>;
+    public taskEntries: Lazy<TaskEntry[]>;
 
     @Field()
     public isDone: boolean = false;

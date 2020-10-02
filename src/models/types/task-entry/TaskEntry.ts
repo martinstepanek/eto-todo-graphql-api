@@ -9,7 +9,7 @@ export class TaskEntry {
     @PrimaryGeneratedColumn('uuid')
     public taskEntryId: string;
 
-    @ManyToOne(() => Task, task => task.taskEntriesDone, {
+    @ManyToOne(() => Task, task => task.taskEntries, {
         lazy: true,
         nullable: false,
     })
