@@ -15,7 +15,9 @@ export class DateHelper {
 
     public static getSunday(date: Date): Date {
         date = new Date(date);
-        return new Date(date.setDate(this.getMonday(date).getDate() + 6));
+        let day = date.getDay(),
+            diff = date.getDate() - day + (day == 0 ? 0 : 7);
+        return new Date(date.setDate(diff));
     }
 
     public static getDateForListType(taskListType: TaskListType): Date {
