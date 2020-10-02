@@ -53,4 +53,7 @@ export class Task {
 
     @Field()
     public isDelayed: boolean = false;
+
+    @Field()
+    public isDeleted: boolean = false;
 }

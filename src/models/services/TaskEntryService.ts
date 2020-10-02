@@ -20,6 +20,7 @@ export class TaskEntryService {
 
             task.isDone = !!entry && entry.type === TaskEntryType.Done;
             task.isDelayed = !!entry && entry.type === TaskEntryType.Delayed;
+            task.isDeleted = !!entry && entry.type === TaskEntryType.Deleted;
         }
 
         return tasks;

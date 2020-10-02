@@ -142,4 +142,31 @@ export class TaskResolver {
 
         return task;
     }
+
+    @Authorized()
+    @Mutation(() => Task, { nullable: true, description: 'Mark task as done' })
+    public async deleteTask(
+        @Arg('taskEntryDelay') taskEntryInput: TaskEntryInput,
+        @Ctx() ctx: Context
+    ): Promise<Task> {
+        const task = await this.taskRepository.findOne(taskEntryInput.taskId);
+        if (!task) {
+            return null;
+        }
+
+        const entry = await this.taskEntryService.findEntry(task, taskEntryInput.when);
+        // done tasks can be deleted
+        if (entry && entry.type !== TaskEntryType.Done) {
+            return task;
+        }
+
+        const taskEntry = new TaskEntry();
+        taskEntry.task = task;
+        taskEntry.whenDone = taskEntryInput.when;
+        taskEntry.type = TaskEntryType.Deleted;
+        await this.taskEntryRepository.save(taskEntry);
+
+        task.isDeleted = true;
+        return task;
+    }
 }

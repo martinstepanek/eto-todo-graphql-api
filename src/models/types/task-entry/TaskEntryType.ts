@@ -1,4 +1,5 @@
 export enum TaskEntryType {
     Done,
-    Delayed
+    Delayed,
+    Deleted
 }
