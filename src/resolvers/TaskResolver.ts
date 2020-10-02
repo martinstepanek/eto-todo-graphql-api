@@ -13,6 +13,7 @@ import { TaskEntry } from '../models/types/task-entry/TaskEntry';
 import { TaskEntryType } from '../models/types/task-entry/TaskEntryType';
 import { DateHelper } from '../models/helpers/DateHelper';
 import { Between } from 'typeorm';
+import { TaskEntryDelayInput } from '../models/types/task-entry/TaskEntryDelayInput';
 
 @Resolver(Task)
 export class TaskResolver {
@@ -39,7 +40,7 @@ export class TaskResolver {
 
     @Authorized()
     @Mutation(() => Task, { description: 'Mark task as done' })
-    public async markTaskAsDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput, @Ctx() ctx: Context): Promise<Task> {
+    public async markTaskAsDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<Task> {
         const task = await this.taskRepository.findOne(taskEntryInput.taskId);
 
         const taskEntry = new TaskEntry();
@@ -54,7 +55,7 @@ export class TaskResolver {
 
     @Authorized()
     @Mutation(() => Task, { description: 'Mark task as not done' })
-    public async markTaskAsNotDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput, @Ctx() ctx: Context): Promise<Task> {
+    public async markTaskAsNotDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<Task> {
         const task = await this.taskRepository.findOne(taskEntryInput.taskId);
         
         const start = DateHelper.getStartOfPeriod(taskEntryInput.when, task.specificDateType);
@@ -70,4 +71,30 @@ export class TaskResolver {
         await this.taskEntryRepository.remove(taskEntry);
         return task;
     }
+
+    @Authorized()
+    @Mutation(() => Task, { description: 'Mark task as done' })
+    public async delayTask(@Arg('taskEntryDelay') taskEntryDelayInput: TaskEntryDelayInput, @Ctx() ctx: Context): Promise<Task> {
+        const task = await this.taskRepository.findOne(taskEntryDelayInput.taskId);
+
+        const taskEntry = new TaskEntry();
+        taskEntry.task = task;
+        taskEntry.whenDone = taskEntryDelayInput.when;
+        taskEntry.type = TaskEntryType.Delayed;
+        await this.taskEntryRepository.save(taskEntry);
+
+        task.isDelayed = true;
+
+        const newTask = new Task();
+        newTask.name = task.name;
+        newTask.detail = task.detail;
+        newTask.user = ctx.userIdentity.user;
+        newTask.specificDateType = taskEntryDelayInput.specificDateType;
+        newTask.specificDateValue = taskEntryDelayInput.specificDateValue;
+        newTask.specificTimeValue = taskEntryDelayInput.specificTimeValue;
+        await this.taskRepository.save(newTask);
+
+        return task;
+    }
+
 }
