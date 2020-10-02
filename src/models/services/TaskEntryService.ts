@@ -11,7 +11,7 @@ import { TaskEntryType } from '../types/task-entry/TaskEntryType';
 export class TaskEntryService {
     constructor(@InjectRepository() private readonly taskEntryDoneRepository: TaskEntryRepository) {}
 
-    public async markDoneFor(tasks: Task[], taskListType: TaskListType): Promise<Task[]> {
+    public async markFor(tasks: Task[], taskListType: TaskListType): Promise<Task[]> {
         const date = DateHelper.getDateForListType(taskListType);
 
         for (const task of tasks) {

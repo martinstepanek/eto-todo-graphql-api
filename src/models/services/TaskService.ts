@@ -17,7 +17,7 @@ export class TaskService {
     ) {}
 
     public async getMarkedTasksByListType(taskListType: TaskListType, forUser: User): Promise<Task[]> {
-        return this.taskEntryService.markDoneFor(await this.getTasksByListType(taskListType, forUser), taskListType);
+        return this.taskEntryService.markFor(await this.getTasksByListType(taskListType, forUser), taskListType);
     }
 
     private async getTasksByListType(taskListType: TaskListType, forUser: User): Promise<Task[]> {
