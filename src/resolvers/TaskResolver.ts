@@ -35,6 +35,25 @@ export class TaskResolver {
     }
 
     @Authorized()
+    @Mutation(() => Task, { nullable: true, description: 'Edit existing task' })
+    public async editTask(@Arg('taskId') taskId: string, @Arg('task') taskInput: TaskInput, @Ctx() ctx: Context): Promise<Task> {
+        const task = await this.taskRepository.findOne(taskId);
+        if (!task) {
+            return null;
+        }
+
+        task.name = taskInput.name;
+        task.detail = taskInput.detail;
+        task.specificDateType = taskInput.specificDateType;
+        task.specificDateValue = taskInput.specificDateValue;
+        task.specificTimeValue = taskInput.specificTimeValue;
+        task.isRecurrent = taskInput.isRecurrent;
+        await this.taskRepository.save(task);
+
+        return task;
+    }
+
+    @Authorized()
     @Query(() => [Task], { description: 'Get tasks by list type' })
     public async getTasks(
         @Arg('listType', () => TaskListType) listType: TaskListType,

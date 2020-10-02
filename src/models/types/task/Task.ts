@@ -28,7 +28,7 @@ export class Task {
     public detail: string;
 
     @Column({ type: 'enum', enum: DateType })
-    @Field()
+    @Field(() => DateType)
     public specificDateType: DateType;
 
     @Column('datetime')
