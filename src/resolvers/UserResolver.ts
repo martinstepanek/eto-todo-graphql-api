@@ -1,10 +1,11 @@
-import { Arg, Authorized, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { User } from '../models/types/user/User';
 import { UserInput } from '../models/types/user/UserInput';
 import { UserRepository } from '../repositories/UserRepository';
 import { InjectRepository } from 'typeorm-typedi-extensions';
 import { Inject } from 'typedi';
 import { AuthService } from '../models/services/AuthService';
+import { Context } from '../models/Context';
 
 @Resolver(User)
 export class UserResolver {
@@ -15,10 +16,16 @@ export class UserResolver {
 
     @Authorized()
     @Query(() => User, { description: 'Get user by id' })
+    public async me(@Ctx() ctx: Context): Promise<User> {
+        return ctx.userIdentity.user;
+    }
+
+    @Authorized()
+    @Query(() => User, { nullable: true, description: 'Get user by id' })
     public async user(@Arg('userId') userId: string): Promise<User> {
         const model = await this.userRepository.findOne(userId);
         if (model === undefined) {
-            // throw not found error
+            return null;
         }
         return model;
     }
