@@ -39,6 +39,27 @@ export class TaskService {
         }
     }
 
+    public doesTaskBelongToPeriod(task: Task, date: Date, dateType: DateType): boolean {
+        if (task.isRecurrent) {
+            const dayEnd = new Date(new Date(date).setHours(23, 59, 59));
+            return (
+                dateType === DateType.Date &&
+                task.createdAt < dayEnd &&
+                (task.specificDateType === DateType.Date ||
+                    (task.specificDateType === DateType.Week && task.recurrentDateValue === date.getDay() + 1) ||
+                    (task.specificDateType === DateType.Month && task.recurrentDateValue === date.getDate()))
+            );
+        } else {
+            if (task.specificDateType !== dateType) {
+                return false;
+            }
+            return (
+                task.specificDateValue >= DateHelper.getStartOfPeriod(date, dateType) &&
+                task.specificDateValue <= DateHelper.getEndOfPeriod(date, dateType)
+            );
+        }
+    }
+
     private async getTasksForDay(forUser: User, dayDate: Date): Promise<Task[]> {
         let day = new Date(dayDate);
         let dayStart = new Date(day).setHours(0, 0, 0, 0);

@@ -45,6 +45,19 @@ export class DateHelper {
         }
     }
 
+    public static getDateTypeForListType(taskListType: TaskListType): DateType {
+        if ([TaskListType.Today, TaskListType.Tomorrow].includes(taskListType)) {
+            return DateType.Date;
+        }
+        if ([TaskListType.ThisWeek, TaskListType.NextWeek].includes(taskListType)) {
+            return DateType.Week;
+        }
+        if ([TaskListType.ThisMonth, TaskListType.NextMonth].includes(taskListType)) {
+            return DateType.Month;
+        }
+        throw new Error('We are sorry, but this list type is not implemented yet');
+    }
+
     public static getStartOfPeriod(date: Date, dateType: DateType): Date {
         if (dateType === DateType.Date) {
             return new Date(new Date(date).setHours(0, 0, 0, 0));

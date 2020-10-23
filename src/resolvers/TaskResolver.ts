@@ -17,6 +17,8 @@ import { TaskEntryDelayInput } from '../models/types/task-entry/TaskEntryDelayIn
 import { TaskEntryService } from '../models/services/TaskEntryService';
 import { DateType } from '../models/types/task/DateType';
 import { TaskEntryDeleteInput } from '../models/types/task-entry/TaskEntryDeleteInput';
+import { TaskOperation } from '../models/types/task/TaskOperation';
+import { TaskOperationType } from '../models/types/task/TaskOperationType';
 
 @Resolver(Task)
 export class TaskResolver {
@@ -28,8 +30,8 @@ export class TaskResolver {
     ) {}
 
     @Authorized()
-    @Mutation(() => Task, { description: 'Create new task' })
-    public async createTask(@Arg('task') taskInput: TaskInput, @Ctx() ctx: Context): Promise<Task> {
+    @Mutation(() => TaskOperation, { description: 'Create new task' })
+    public async createTask(@Arg('task') taskInput: TaskInput, @Ctx() ctx: Context): Promise<TaskOperation> {
         // TODO: add custom validator
         if (
             taskInput.isRecurrent &&
@@ -46,8 +48,30 @@ export class TaskResolver {
 
         const task = this.taskRepository.create(taskInput);
         task.user = ctx.userIdentity.user;
-        await this.taskRepository.save(task);
-        return await this.taskRepository.findOne(task.taskId);
+        const newTask = await this.taskRepository.save(task);
+
+        const listTypes = [
+            TaskListType.Today,
+            TaskListType.Tomorrow,
+            TaskListType.ThisWeek,
+            TaskListType.NextWeek,
+            TaskListType.ThisMonth,
+            TaskListType.NextMonth,
+        ];
+
+        const inLists = listTypes.filter(listType =>
+            this.taskService.doesTaskBelongToPeriod(
+                newTask,
+                DateHelper.getDateForListType(listType),
+                DateHelper.getDateTypeForListType(listType)
+            )
+        );
+
+        return {
+            operationType: TaskOperationType.Create,
+            task: newTask,
+            inLists,
+        };
     }
 
     @Authorized()
