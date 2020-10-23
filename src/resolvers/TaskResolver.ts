@@ -88,7 +88,7 @@ export class TaskResolver {
 
     @Authorized()
     @Query(() => [Task], { description: 'Get tasks by list type' })
-    public async getTasks(
+    public async tasks(
         @Arg('listType', () => TaskListType) listType: TaskListType,
         @Ctx() ctx: Context
     ): Promise<Task[]> {
