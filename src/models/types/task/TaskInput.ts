@@ -1,5 +1,6 @@
 import { Field, InputType, Int } from 'type-graphql';
 import { DateType } from './DateType';
+import { Length } from 'class-validator';
 
 @InputType()
 export class TaskInput {
@@ -7,6 +8,7 @@ export class TaskInput {
     public name: string;
 
     @Field({ description: "Task's detail", nullable: true })
+    @Length(0, 500)
     public detail: string;
 
     @Field(() => DateType)

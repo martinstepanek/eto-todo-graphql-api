@@ -27,7 +27,7 @@ export class Task {
     @Field()
     public name: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: 'text' })
     @Field({ nullable: true })
     public detail: string;
 
