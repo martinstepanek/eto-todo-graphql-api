@@ -19,6 +19,7 @@ import { DateType } from '../models/types/task/DateType';
 import { TaskEntryDeleteInput } from '../models/types/task-entry/TaskEntryDeleteInput';
 import { TaskOperation } from '../models/types/task/TaskOperation';
 import { TaskOperationType } from '../models/types/task/TaskOperationType';
+import { TaskListService } from '../models/services/TaskListService';
 
 @Resolver(Task)
 export class TaskResolver {
@@ -26,7 +27,8 @@ export class TaskResolver {
         @InjectRepository() private readonly taskRepository: TaskRepository,
         @InjectRepository() private readonly taskEntryRepository: TaskEntryRepository,
         @Inject('TaskService') private readonly taskService: TaskService,
-        @Inject('TaskEntryService') private readonly taskEntryService: TaskEntryService
+        @Inject('TaskEntryService') private readonly taskEntryService: TaskEntryService,
+        @Inject('TaskListService') private readonly taskListService: TaskListService
     ) {}
 
     @Authorized()
@@ -50,27 +52,10 @@ export class TaskResolver {
         task.user = ctx.userIdentity.user;
         const newTask = await this.taskRepository.save(task);
 
-        const listTypes = [
-            TaskListType.Today,
-            TaskListType.Tomorrow,
-            TaskListType.ThisWeek,
-            TaskListType.NextWeek,
-            TaskListType.ThisMonth,
-            TaskListType.NextMonth,
-        ];
-
-        const inLists = listTypes.filter(listType =>
-            this.taskService.doesTaskBelongToPeriod(
-                newTask,
-                DateHelper.getDateForListType(listType),
-                DateHelper.getDateTypeForListType(listType)
-            )
-        );
-
         return {
             operationType: TaskOperationType.Create,
             task: newTask,
-            inLists,
+            inLists: this.taskListService.getInListsByTask(newTask),
         };
     }
 
@@ -120,8 +105,8 @@ export class TaskResolver {
     }
 
     @Authorized()
-    @Mutation(() => Task, { nullable: true, description: 'Mark task as done' })
-    public async markTaskAsDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<Task> {
+    @Mutation(() => TaskOperation, { nullable: true, description: 'Mark task as done' })
+    public async markTaskAsDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<TaskOperation> {
         const task = await this.taskRepository.findOne({
             where: {
                 taskId: taskEntryInput.taskId,
@@ -133,8 +118,15 @@ export class TaskResolver {
         }
 
         const entry = await this.taskEntryService.findEntry(task, taskEntryInput.when);
+
+        const operation =  {
+            operationType: TaskOperationType.MarkAsDone,
+            task,
+            inLists: this.taskListService.getInListsByDate(taskEntryInput.when),
+        };
+
         if (entry) {
-            return task;
+            return operation;
         }
 
         const taskEntry = new TaskEntry();
@@ -144,12 +136,12 @@ export class TaskResolver {
         await this.taskEntryRepository.save(taskEntry);
 
         task.isDone = true;
-        return task;
+        return operation;
     }
 
     @Authorized()
-    @Mutation(() => Task, { nullable: true, description: 'Mark task as not done' })
-    public async markTaskAsNotDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<Task> {
+    @Mutation(() => TaskOperation, { nullable: true, description: 'Mark task as not done' })
+    public async markTaskAsNotDone(@Arg('taskEntry') taskEntryInput: TaskEntryInput): Promise<TaskOperation> {
         const task = await this.taskRepository.findOne({
             where: {
                 taskId: taskEntryInput.taskId,
@@ -171,7 +163,11 @@ export class TaskResolver {
         });
 
         await this.taskEntryRepository.remove(taskEntry);
-        return task;
+        return {
+            operationType: TaskOperationType.MarkAsNotDone,
+            task,
+            inLists: this.taskListService.getInListsByDate(taskEntryInput.when),
+        };
     }
 
     @Authorized()
